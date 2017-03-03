@@ -1,6 +1,6 @@
 #pragma once
 #include <string.h>
-#include <sys/socket.h>
+#include <winsock2.h>
 typedef char* string;
 
 class Client {
@@ -15,4 +15,6 @@ public:
 private:
 	int socket;
 	int success;
+	sockaddr_in saddr;
+	WSADATA wlib;
 };
