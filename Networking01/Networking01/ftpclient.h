@@ -1,6 +1,6 @@
 #pragma once
 #include <string.h>
-#include <winsock.h>
+#include <sys/socket.h>
 typedef char* string;
 
 class Client {
@@ -14,7 +14,5 @@ public:
 	void upload(string filePath, string targetDir);
 private:
 	int socket;
-	sockaddr_in saddr;
-	WSADATA wlib;
 	int success;
 };
