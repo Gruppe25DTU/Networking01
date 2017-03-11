@@ -22,8 +22,13 @@ int main(int argc , char **argv) {
 	client.initCommands();
 	char quit[] = "quit";
 	string input;
-	if (client.Connect(21, "88.99.32.10") != 0) {
+	int port = 21;
+	char* host = "88.99.32.10";
+	if (client.Connect(21, host) != 0) {
 		cout << "Failed to connect!" << endl;
+	}
+	else {
+		cout << "Forbundet til " << host << ":" << port << endl;
 	}
 	do {
 		input = "";
