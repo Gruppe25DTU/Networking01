@@ -181,7 +181,7 @@ void Client::download(const char* pmsg, int size)
 	string tmp = pmsg;
 	string cmd = "RETR ";
 	cmd.append(tmp.substr(9, string::npos));
-	GetData(cmd);
+	GetFile(cmd);
 
 }
 
@@ -193,8 +193,7 @@ int Client::SendMsg(const char *pmsg, int size, int socket) {
 	return nOk;
 }
 
-void Client::GetData(string cmd) {
-	ostringstream strbuf;
+void Client::GetFile(string cmd) {
 	bool namegiven = true;
 	string filestr;
 	string filename = getArg(cmd.c_str(), 2);
@@ -222,30 +221,10 @@ void Client::GetData(string cmd) {
 		cout << "Kunne ikke åbne filen!" << endl;
 		return;
 	}
-	int rval;
-	DataConnect();
-	SendMsg(cmd.c_str(), cmd.size(), cs);
-	GetReply(cs);
-	cout << reply;
-	if (reply.substr(0, 3).compare("550") == 0) {
-		cout << "Kunne ikke åbne filen!" << endl;
-		DataCloseCon();
-		return;
-	}
-	char partial_reply[DEFAULT_BUFFER_SIZE];
-	do {
-		rval = (int)recv(ds, partial_reply, DEFAULT_BUFFER_SIZE - 1, 0);
-		if (rval > 0) {
-			file.write(partial_reply, rval);
-			filestr.append(string(partial_reply).substr(0,rval));
-			
-		}
-	} while (rval > 0);
-	//file << strbuf.rdbuf();
+	GetData(cmd, true, file);
+	filestr = reply;
 	file.close();
-	//filestr = strbuf.str();
-	//prints out the first 1KB 
-	int sublen = 1024 > filestr.size()? filestr.size(): 1024;
+	int sublen = 1024 > filestr.size() ? filestr.size(): 1024;
 	cout << filestr.substr(0, sublen) << endl;;
 	//----------------------------------------------------------
 	if (filestr.size() == 0 || (filestr.size() > 0 && filestr.at(filestr.size() - 1) != '\n')) {
@@ -258,37 +237,47 @@ void Client::GetData(string cmd) {
 
 void Client::GetList(string cmd)
 {
-	string listStr;
+	GetData(cmd, true, cout);
+	GetReply(cs);
+	cout << reply;
+	DataCloseCon();
+}
+
+string Client::GetData(string cmd, bool print, std::ostream& ostream = std::cout)
+{
 	string fullreply;
 	int rval;
-	int total;
 	DataConnect();
 	SendMsg(cmd.c_str(), cmd.size(), cs);
 	GetReply(cs);
 	cout << reply;
-	if (reply.substr(0, 3).compare("500") == 0 || 
-		reply.substr(0, 3).compare("501") == 0 || 
+	if (reply.substr(0, 3).compare("500") == 0 ||
+		reply.substr(0, 3).compare("501") == 0 ||
 		reply.substr(0, 3).compare("502") == 0 ||
 		reply.substr(0, 3).compare("530") == 0 ||
-		reply.substr(0, 3).compare("421") == 0) 
+		reply.substr(0, 3).compare("421") == 0 ||
+		reply.substr(0, 3).compare("550") == 0)
 	{
-		cout << "Kunne ikke hente listen" << endl;
+		cout << "Kunne ikke hente data!" << endl;
 		DataCloseCon();
-		return;
+		return NULL;
 	}
 	char partial_reply[DEFAULT_BUFFER_SIZE];
 	do {
 		rval = (int)recv(ds, partial_reply, DEFAULT_BUFFER_SIZE - 1, 0);
 		if (rval > 0) {
-			fullreply.append(string(partial_reply).substr(0,rval));
+			fullreply.append(string(partial_reply).substr(0, rval));
+			if (print) {
+				ostream.write(partial_reply, rval);
+				//ostream.flush();
+			}
 		}
 	} while (rval > 0);
-	cout << fullreply <<endl;
-	GetReply(cs);
-	cout << reply;
-	DataCloseCon();
-
+	reply = fullreply;
+	return fullreply;
 }
+
+
 
 const char* Client::GetReply(int socket) {
 	reply = "";

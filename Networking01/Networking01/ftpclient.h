@@ -34,8 +34,9 @@ private:
 	                                               //A Command object
 
 	int SendMsg(const char *pmsg, int size, int socket);
-	void GetData(std::string cmd);
+	void GetFile(std::string cmd);
 	void GetList(std::string cmd);
+	std::string GetData(std::string cmd, bool print, std::ostream& out);
 	void DataConnect();
 	void DataCloseCon();
 	std::string getArg(const char *pmsg, int argNumber) const;
@@ -47,6 +48,7 @@ private:
 	int nOk;
 
 public:
+	~Client();
 	void ParseMsg(const char *pmsg, int size); //All messages from our controlsocket runs through here where they get 
 											   //redirected to other member functions that handles specific FTP commands
 	int Connect(int port, char *adr);
